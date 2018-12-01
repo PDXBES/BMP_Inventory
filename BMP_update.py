@@ -5,7 +5,8 @@
 # Author:      DCA - BES - ASM
 #
 # Created:     30/01/2015
-
+#
+#
 #-------------------------------------------------------------------------------
 import arcpy
 from utilities import reorder_fields, rename_fields, addMessage
@@ -24,13 +25,12 @@ egh_public = r"\\oberon\grp117\DAshney\Scripts\connections\egh_public on gisdb1.
 addMessage("Getting inputs")
 collection_nodes = egh_public + r"\EGH_PUBLIC.ARCMAP_ADMIN.collection_points_bes_pdx"
 collection_links = egh_public + r"\EGH_PUBLIC.ARCMAP_ADMIN.collection_lines_bes_pdx"
-#inflow_controls = egh_public + r"\EGH_PUBLIC.ARCMAP_ADMIN.ic_streettargets_bes_pdx"
 ecoroof_pnts = egh_public + r"\EGH_PUBLIC.ARCMAP_ADMIN.ecoroof_pts_bes_pdx"
 streams = egh_public + r"\EGH_PUBLIC.ARCMAP_ADMIN.stream_lines_pdx"
-  #private facilities are a snapshot provided by Loren Shelley - ask for a refresh as needed
+# private facilities are a snapshot provided by Loren Shelley - ask for a refresh as needed
 private = r"\\oberon\modeling\GridMaster\BMP\PRF\ARC\Working\2018_setup\data\MIP_Private_SMFs_Jan2015.mdb\MIP_Facilities_Jan2015"
 ms4 = egh_public + r"\EGH_PUBLIC.ARCMAP_ADMIN.of_drainage_bounds_bes_pdx"
-  #part of these are Kevin's revised subwatersheds - does not include Springbrook Creek
+# part of these are Kevin's revised subwatersheds - does not include Springbrook Creek
 subwatersheds = egh_public + r"\EGH_PUBLIC.ARCMAP_ADMIN.ms4_catchments_bes_pdx"
 
 final_output = r"\\oberon\modeling\GridMaster\BMP\PRF\ARC\Working\2018_setup\data\BMP_update_2018.gdb"
@@ -39,16 +39,14 @@ final_output = r"\\oberon\modeling\GridMaster\BMP\PRF\ARC\Working\2018_setup\dat
 addMessage("Creating data subsets")
 links_sub = "links_sub"
 nodes_sub = "nodes_sub"
-inflow_controls_sub = "inflow_controls_sub"
 #no need to subset ecoroofs
 private_sub = "private_sub"
 ms4_sub = "ms4_sub"
 subwatersheds_sub = "subwatesheds_sub"
 
-#create in memory versions of subsets
+#create in memory versions of subsets - check this every run - prob want to pull these out into thier own lists to reference
 arcpy.MakeFeatureLayer_management(collection_links, links_sub, "UNITTYPE in ('CHDTC', 'CHRTF', 'CHSWL', 'STINF','CHGRSTFA') AND SERVSTAT = 'IN'")
 arcpy.MakeFeatureLayer_management(collection_nodes, nodes_sub, "UNITTYPE in ('CNFLTR', 'DVT', 'PND', 'SBX', 'SED', 'SF', 'SST') AND SERVSTAT = 'IN'")
-#arcpy.MakeFeatureLayer_management(inflow_controls, inflow_controls_sub, "constructed <> 0 and typeCode in ( 'c', 'C', 'p')")
 arcpy.MakeFeatureLayer_management(private, private_sub, "[FirstOfCode] in (' Constructed Treatment Wetland', 'Contained Planter Box', 'Detention Pond - Dry',+\
  'Detention Pond - Wet', 'Drywell', 'Ecoroof', 'Flow Through Planter Box', 'Infiltration Basin', 'Infiltration Planter Box', 'Infiltration Trench',+\
   'Porous Pavement', 'Sand Filter', 'Sedimentation Manhole', 'Silt Basin', 'Soakage Trench', 'Swale', 'Vegetated Filter')")
@@ -58,7 +56,6 @@ arcpy.MakeFeatureLayer_management(subwatersheds, subwatersheds_sub, "Basin <>'N/
 #copy subsets to output
 addMessage("Copying subset results")
 arcpy.CopyFeatures_management(nodes_sub, temp + r"\DME_nodes", "", "0", "0", "0")
-#arcpy.CopyFeatures_management(inflow_controls_sub, temp + r"\inflow_controls", "", "0", "0", "0")
 arcpy.CopyFeatures_management(private_sub, temp + r"\private", "", "0", "0", "0")
 arcpy.CopyFeatures_management(ecoroof_pnts, temp + r"\ecoroofs", "", "0", "0", "0")
 
@@ -66,27 +63,9 @@ arcpy.CopyFeatures_management(ecoroof_pnts, temp + r"\ecoroofs", "", "0", "0", "
 addMessage("Converting DME links to points")
 arcpy.FeatureVerticesToPoints_management(links_sub,temp + r"\LinkstoPoint","END")
 
-"""
-# TO BE REMOVED ONCE REST OF SCRIPT IS FINALIZED
-nodes_lyr = arcpy.MakeFeatureLayer_management(collection_nodes,"nodes_lyr")
-nodes_join = arcpy.AddJoin_management(nodes_lyr,"UNITID",links_sub,"TO_NODE","KEEP_COMMON")
-pnt = arcpy.CopyFeatures_management(nodes_join, r"in_memory\LinkstoPoint", "", "0", "0", "0")
-arcpy.RemoveJoin_management(nodes_join)
-
-links_order=[]
-links_rename = {}
-fields = arcpy.ListFields(pnt,'*lines*')
-for field in fields:
-    links_order.append(field.name)
-    links_rename.update({field.name:field.name.replace('EGH_PUBLIC_ARCMAP_ADMIN_collection_lines_bes_pdx_','')})
-reorder = reorder_fields(pnt,r"in_memory\LinkstoPoint_reorder",links_order,add_missing = False)
-rename_fields(reorder, temp + r"\LinkstoPoint",links_rename)
-"""
-
 #add required fields to layers
 add_StandardFields(temp + r"\LinkstoPoint")
 add_StandardFields(temp + r"\DME_nodes")
-#add_StandardFields(temp + r"\inflow_controls")
 add_StandardFields(temp + r"\private")
 add_StandardFields(temp + r"\ecoroofs")
 
@@ -95,28 +74,24 @@ add_StandardFields(temp + r"\ecoroofs")
 #populate UID fields
 incrementField(temp + r"\LinkstoPoint")
 incrementField(temp + r"\DME_nodes")
-#incrementField(temp + r"\inflow_controls")
 incrementField(temp + r"\private")
 incrementField(temp + r"\ecoroofs")
 
 #populate Data_Source fields
 fillField(temp + r"\LinkstoPoint","Data_Source","collection_lines")
 fillField(temp + r"\DME_nodes","Data_Source","collection_nodes")
-#fillField(temp + r"\inflow_controls","Data_Source","inflow_controls")
 fillField(temp + r"\private","Data_Source","private")
 fillField(temp + r"\ecoroofs","Data_Source","ecoroofs")
 
 #populate Original ID fields
 fillField_fromAnother(temp + r"\LinkstoPoint","Original_ID","GLOBALID")
 fillField_fromAnother(temp + r"\DME_nodes","Original_ID","GLOBALID")
-#fillField_fromAnother(temp + r"\inflow_controls","Original_ID","icID")
 fillField_fromAnother(temp + r"\private","Original_ID","FAC_ID")
 fillField_fromAnother(temp + r"\ecoroofs","Original_ID","PROPERTYID")
 
 #populate Original Type fields
 fillField_fromAnother(temp + r"\LinkstoPoint","Original_Type","UNITTYPE")
 fillField_fromAnother(temp + r"\DME_nodes","Original_Type","UNITTYPE")
-#fillField_fromAnother(temp + r"\inflow_controls","Original_Type","typeCode")
 fillField_fromAnother(temp + r"\private","Original_Type","FirstOfCode")
 fillField(temp + r"\ecoroofs","Original_Type","Ecoroof")
 
@@ -124,24 +99,12 @@ fillField(temp + r"\ecoroofs","Original_Type","Ecoroof")
 fillField_fromAnother(temp + r"\LinkstoPoint","Gen_Type","DETAIL_SYMBOL")
 fillField_fromAnother(temp + r"\DME_nodes","Gen_Type","DETAIL_SYMBOL")
 
-"""
-addMessage("Populating the Gen_Type field for " +  temp + r"\inflow_controls")
-with arcpy.da.UpdateCursor(temp + r"\inflow_controls", ["Original_Type","Gen_Type"]) as cursor:
-        for row in cursor:
-            if row[0] == "c":
-                row[1] = "catchment swale"
-            elif row[0] == "p":
-                row[1] = "porous pavement"
-            cursor.updateRow(row)
-"""
-
 fillField_fromAnother(temp + r"\private","Gen_Type","FirstOfCode")
 fillField(temp + r"\ecoroofs","Gen_Type","Ecoroof")
 
 #populate Install Date fields - verify availability for private
 fillField_fromAnother(temp + r"\LinkstoPoint","InstallDate","INSTALL_DATE")
 fillField_fromAnother(temp + r"\DME_nodes","InstallDate","INSTALL_DATE")
-#fillField_fromAnother(temp + r"\inflow_controls","InstallDate","constructed")
 fillField_fromAnother(temp + r"\private","InstallDate","FirstOfOnMSigDate")
 fillField_fromAnother(temp + r"\ecoroofs","InstallDate","YEAR_")
 
@@ -153,21 +116,18 @@ fillField_fromAnother(temp + r"\DME_nodes","As_Built","JOBNO")
 #populate Subwatershed field with values
 calcField_fromOverlap(temp + r"\LinkstoPoint",subwatersheds_sub,"Subwatershed","Basin")
 calcField_fromOverlap(temp + r"\DME_nodes",subwatersheds_sub,"Subwatershed","Basin")
-#calcField_fromOverlap(temp + r"\inflow_controls",subwatersheds_sub,"Subwatershed","Basin_")
 calcField_fromOverlap(temp + r"\private",subwatersheds_sub,"Subwatershed","Basin")
 calcField_fromOverlap(temp + r"\ecoroofs",subwatersheds_sub,"Subwatershed","Basin")
 
 #populate MS4 field with 1, else with 0
 fillField_ifOverlap(temp + r"\LinkstoPoint",ms4_sub,"MS4",1)
 fillField_ifOverlap(temp + r"\DME_nodes",ms4_sub,"MS4",1)
-#fillField_ifOverlap(temp + r"\inflow_controls",ms4_sub,"MS4",1)
 fillField_ifOverlap(temp + r"\private",ms4_sub,"MS4",1)
 fillField_ifOverlap(temp + r"\ecoroofs",ms4_sub,"MS4",1)
 
 #   populate those not within MS4 with 0
 fillField_Conditional(temp + r"\LinkstoPoint","MS4",0)
 fillField_Conditional(temp + r"\DME_nodes","MS4",0)
-#fillField_Conditional(temp + r"\inflow_controls","MS4",0)
 fillField_Conditional(temp + r"\private","MS4",0)
 fillField_Conditional(temp + r"\ecoroofs","MS4",0)
 
@@ -175,7 +135,6 @@ fillField_Conditional(temp + r"\ecoroofs","MS4",0)
 
 calcField_withinDistance(temp + r"\LinkstoPoint",streams,"MS4=1 AND Original_Type = 'CHDTC'",30,"In_Stream",1)
 calcField_withinDistance(temp + r"\DME_nodes",streams,"MS4=1 AND Original_Type = 'CHDTC'",30,"In_Stream",1)
-#calcField_withinDistance(temp + r"\inflow_controls",streams,"MS4=1 AND Original_Type = 'CHDTC'",30,"In_Stream",1)
 calcField_withinDistance(temp + r"\private",streams,"MS4=1 AND Original_Type = 'CHDTC'",30,"In_Stream",1)
 calcField_withinDistance(temp + r"\ecoroofs",streams,"MS4=1 AND Original_Type = 'CHDTC'",30,"In_Stream",1)
 
@@ -183,7 +142,6 @@ calcField_withinDistance(temp + r"\ecoroofs",streams,"MS4=1 AND Original_Type = 
 
 fillField_Conditional(temp + r"\LinkstoPoint","In_Stream",0)
 fillField_Conditional(temp + r"\DME_nodes","In_Stream",0)
-#fillField_Conditional(temp + r"\inflow_controls","In_Stream",0)
 fillField_Conditional(temp + r"\private","In_Stream",0)
 fillField_Conditional(temp + r"\ecoroofs","In_Stream",0)
 
@@ -219,13 +177,11 @@ ACWA = ({1:"Centrifugal Seperator Hydrodynamic Device",
 
 fillField_fromDict(temp + r"\LinkstoPoint",assignments,"Original_Type","ACWA_ID")
 fillField_fromDict(temp + r"\DME_nodes",assignments,"Original_Type","ACWA_ID")
-#fillField_fromDict(temp + r"\inflow_controls",assignments,"Original_Type","ACWA_ID")
 fillField_fromDict(temp + r"\private",assignments,"Original_Type","ACWA_ID")
 fillField_fromDict(temp + r"\ecoroofs",assignments,"Original_Type","ACWA_ID")
 
 fillField_fromDict(temp + r"\LinkstoPoint",ACWA,"ACWA_ID","ACWA_Type")
 fillField_fromDict(temp + r"\DME_nodes",ACWA,"ACWA_ID","ACWA_Type")
-#fillField_fromDict(temp + r"\inflow_controls",ACWA,"ACWA_ID","ACWA_Type")
 fillField_fromDict(temp + r"\private",ACWA,"ACWA_ID","ACWA_Type")
 fillField_fromDict(temp + r"\ecoroofs",ACWA,"ACWA_ID","ACWA_Type")
 
@@ -236,12 +192,10 @@ reorder = ['UID','Original_ID','As_Built','InstallDate','MS4','Data_Source','Ori
 
 reorder_fields(temp + r"\LinkstoPoint",temp + r"\LinkstoPoint_reorder",reorder,add_missing = False)
 reorder_fields(temp + r"\DME_nodes",temp + r"\DME_nodes_reorder",reorder,add_missing = False)
-#reorder_fields(temp + r"\inflow_controls",temp + r"\inflow_controls_reorder",reorder,add_missing = False)
 reorder_fields(temp + r"\private",temp + r"\private_reorder",reorder,add_missing = False)
 reorder_fields(temp + r"\ecoroofs",temp + r"\ecoroofs_reorder",reorder,add_missing = False)
 
 #merge feature classes
-# inflow_controls_reorder was removed from merge_input (3/11/2015)
 addMessage("Merging source features into one inventory")
 merge_input = [temp + r"\LinkstoPoint_reorder",temp + r"\DME_nodes_reorder",temp + r"\private_reorder",temp + r"\ecoroofs_reorder"]
 arcpy.Merge_management(merge_input,final_output + r"\BMP_inventory")
