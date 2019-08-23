@@ -46,7 +46,7 @@ subwatersheds_sub = "subwatesheds_sub"
 
 #create in memory versions of subsets - check this every run - prob want to pull these out into thier own lists to reference
 arcpy.MakeFeatureLayer_management(collection_links, links_sub, "UNITTYPE in ('CHDTC', 'CHRTF', 'CHSWL', 'STINF','CHGRSTFA') AND SERVSTAT = 'IN'")
-arcpy.MakeFeatureLayer_management(collection_nodes, nodes_sub, "UNITTYPE in ('CNFLTR', 'DVT', 'PND', 'SBX', 'SED', 'SF', 'SST') AND SERVSTAT = 'IN'")
+arcpy.MakeFeatureLayer_management(collection_nodes, nodes_sub, "(UNITTYPE in ('DVT', 'MSTF', 'PND', 'SBX', 'SED', 'SF', 'SST') or SUBTYPE in ('Filterra', 'STMFLTR', 'CNSTRTWLND', 'DRYINFPOND', 'SPILLPOND' , 'WETPOND')) AND SERVSTAT = 'IN'")
 arcpy.MakeFeatureLayer_management(private, private_sub, "[FirstOfCode] in (' Constructed Treatment Wetland', 'Contained Planter Box', 'Detention Pond - Dry',+\
  'Detention Pond - Wet', 'Drywell', 'Ecoroof', 'Flow Through Planter Box', 'Infiltration Basin', 'Infiltration Planter Box', 'Infiltration Trench',+\
   'Porous Pavement', 'Sand Filter', 'Sedimentation Manhole', 'Silt Basin', 'Soakage Trench', 'Swale', 'Vegetated Filter')")
