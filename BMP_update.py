@@ -27,8 +27,8 @@ collection_nodes = egh_public + r"\EGH_PUBLIC.ARCMAP_ADMIN.collection_points_bes
 collection_links = egh_public + r"\EGH_PUBLIC.ARCMAP_ADMIN.collection_lines_bes_pdx"
 ecoroof_pnts = egh_public + r"\EGH_PUBLIC.ARCMAP_ADMIN.ecoroof_pts_bes_pdx"
 streams = egh_public + r"\EGH_PUBLIC.ARCMAP_ADMIN.stream_lines_pdx"
-# private facilities are a snapshot provided by Loren Shelley - ask for a refresh as needed
-private = r"\\oberon\modeling\GridMaster\BMP\PRF\ARC\Working\2018_setup\data\MIP_Private_SMFs_Jan2015.mdb\MIP_Facilities_Jan2015"
+private = egh_public + "r\EGH_PUBLIC.ARCMAP_ADMIN.priv_mip_strm_facs_bes_pdx"
+westside = r"\\oberon\modeling\GridMaster\BMP\PRF\ARC\Working\2018_setup\data\update_input.mdb\westside_city"
 ms4 = egh_public + r"\EGH_PUBLIC.ARCMAP_ADMIN.of_drainage_bounds_bes_pdx"
 # part of these are Kevin's revised subwatersheds - does not include Springbrook Creek
 subwatersheds = egh_public + r"\EGH_PUBLIC.ARCMAP_ADMIN.ms4_catchments_bes_pdx"
@@ -131,22 +131,9 @@ fillField_Conditional(temp + r"\DME_nodes","MS4",0)
 fillField_Conditional(temp + r"\private","MS4",0)
 fillField_Conditional(temp + r"\ecoroofs","MS4",0)
 
-#populate the In Stream field with 1, else with 0
-
-calcField_withinDistance(temp + r"\LinkstoPoint",streams,"MS4=1 AND Original_Type = 'CHDTC'",30,"In_Stream",1)
-calcField_withinDistance(temp + r"\DME_nodes",streams,"MS4=1 AND Original_Type = 'CHDTC'",30,"In_Stream",1)
-calcField_withinDistance(temp + r"\private",streams,"MS4=1 AND Original_Type = 'CHDTC'",30,"In_Stream",1)
-calcField_withinDistance(temp + r"\ecoroofs",streams,"MS4=1 AND Original_Type = 'CHDTC'",30,"In_Stream",1)
-
-#   populate those not In Stream with 0
-
-fillField_Conditional(temp + r"\LinkstoPoint","In_Stream",0)
-fillField_Conditional(temp + r"\DME_nodes","In_Stream",0)
-fillField_Conditional(temp + r"\private","In_Stream",0)
-fillField_Conditional(temp + r"\ecoroofs","In_Stream",0)
-
 
 #populate ACWA values
+# if UNITTYPES (above) change then the assignments will need to change as well
 
 #1st row = DME nodes
 assignments = ({'CNFLTR':2,'DVT':7,'PND':4,'SBX':7,'SED':7,'SF':2,'SST':7,
@@ -185,6 +172,11 @@ fillField_fromDict(temp + r"\DME_nodes",ACWA,"ACWA_ID","ACWA_Type")
 fillField_fromDict(temp + r"\private",ACWA,"ACWA_ID","ACWA_Type")
 fillField_fromDict(temp + r"\ecoroofs",ACWA,"ACWA_ID","ACWA_Type")
 
+#separate process for ACWA type 11 (ditches on westside of river)
+links_ACWA = arcpy.MakeFeatureLayer_management(temp + r"\LinkstoPoint", "links_ACWA", "UNITTYPE in ('CHDTC')")
+fillField_ifOverlap(links_ACWA,westside,"ACWA_ID",11)
+fillField_fromDict(links_ACWA,ACWA,"ACWA_ID","ACWA_Type")
+
 #re-order fields and drop those not needed
 addMessage("Re ordering fields")
 
@@ -199,3 +191,5 @@ reorder_fields(temp + r"\ecoroofs",temp + r"\ecoroofs_reorder",reorder,add_missi
 addMessage("Merging source features into one inventory")
 merge_input = [temp + r"\LinkstoPoint_reorder",temp + r"\DME_nodes_reorder",temp + r"\private_reorder",temp + r"\ecoroofs_reorder"]
 arcpy.Merge_management(merge_input,final_output + r"\BMP_inventory")
+
+incrementField(final_output + r"\BMP_points")
