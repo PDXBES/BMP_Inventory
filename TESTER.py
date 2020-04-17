@@ -11,7 +11,7 @@
 
 import arcpy
 from utilities import reorder_fields, rename_fields, addMessage
-from tools import add_StandardFields, incrementField, fillField, fillField_fromAnother
+from BMP_tools import add_StandardFields, incrementField, fillField, fillField_fromAnother
 
 arcpy.env.overwriteOutput = True
 
