@@ -28,12 +28,11 @@ collection_links = egh_public + r"\EGH_PUBLIC.ARCMAP_ADMIN.collection_lines_bes_
 ecoroof_pnts = egh_public + r"\EGH_PUBLIC.ARCMAP_ADMIN.ecoroof_pts_bes_pdx"
 streams = egh_public + r"\EGH_PUBLIC.ARCMAP_ADMIN.stream_lines_pdx"
 private = egh_public + "r\EGH_PUBLIC.ARCMAP_ADMIN.priv_mip_strm_facs_bes_pdx"
-westside = r"\\oberon\modeling\GridMaster\BMP\PRF\ARC\Working\2018_setup\data\update_input.mdb\westside_city"
+westside = r"\\oberon\modeling\GridMaster\BMP\PRF\ARC\Working\BMP_2020\data\update_input.mdb\westside_city"
 ms4 = egh_public + r"\EGH_PUBLIC.ARCMAP_ADMIN.of_drainage_bounds_bes_pdx"
-# part of these are Kevin's revised subwatersheds - does not include Springbrook Creek
 subwatersheds = egh_public + r"\EGH_PUBLIC.ARCMAP_ADMIN.ms4_catchments_bes_pdx"
 
-final_output = r"\\oberon\modeling\GridMaster\BMP\PRF\ARC\Working\2018_setup\data\BMP_update_2018.gdb"
+final_output = r"\\oberon\modeling\GridMaster\BMP\PRF\ARC\Working\2018_setup\data\BMP_2020.gdb"
 
 #snapshot and subset data based on established unit types - these must be re-established with each MS4 submittal"
 addMessage("Creating data subsets")
@@ -47,7 +46,7 @@ subwatersheds_sub = "subwatesheds_sub"
 #create in memory versions of subsets - check this every run - prob want to pull these out into thier own lists to reference
 arcpy.MakeFeatureLayer_management(collection_links, links_sub, "UNITTYPE in ('CHDTC', 'CHRTF', 'CHSWL', 'STINF','CHGRSTFA') AND SERVSTAT = 'IN'")
 arcpy.MakeFeatureLayer_management(collection_nodes, nodes_sub, "(UNITTYPE in ('DVT', 'MSTF', 'PND', 'SBX', 'SED', 'SF', 'SST') or SUBTYPE in ('Filterra', 'STMFLTR', 'CNSTRTWLND', 'DRYINFPOND', 'SPILLPOND' , 'WETPOND')) AND SERVSTAT = 'IN'")
-arcpy.MakeFeatureLayer_management(private, private_sub, "[FirstOfCode] in (' Constructed Treatment Wetland', 'Contained Planter Box', 'Detention Pond - Dry',+\
+arcpy.MakeFeatureLayer_management(private, private_sub, "Code in (' Constructed Treatment Wetland', 'Contained Planter Box', 'Detention Pond - Dry',+\
  'Detention Pond - Wet', 'Drywell', 'Ecoroof', 'Flow Through Planter Box', 'Infiltration Basin', 'Infiltration Planter Box', 'Infiltration Trench',+\
   'Porous Pavement', 'Sand Filter', 'Sedimentation Manhole', 'Silt Basin', 'Soakage Trench', 'Swale', 'Vegetated Filter')")
 arcpy.MakeFeatureLayer_management(ms4, ms4_sub, "Basin <>'N/A' and Basin is not Null AND Boundary_Type= 'MS4'")
@@ -98,7 +97,6 @@ fillField(temp + r"\ecoroofs","Original_Type","Ecoroof")
 #populate Gen Type fields
 fillField_fromAnother(temp + r"\LinkstoPoint","Gen_Type","DETAIL_SYMBOL")
 fillField_fromAnother(temp + r"\DME_nodes","Gen_Type","DETAIL_SYMBOL")
-
 fillField_fromAnother(temp + r"\private","Gen_Type","FirstOfCode")
 fillField(temp + r"\ecoroofs","Gen_Type","Ecoroof")
 
@@ -107,7 +105,6 @@ fillField_fromAnother(temp + r"\LinkstoPoint","InstallDate","INSTALL_DATE")
 fillField_fromAnother(temp + r"\DME_nodes","InstallDate","INSTALL_DATE")
 fillField_fromAnother(temp + r"\private","InstallDate","FirstOfOnMSigDate")
 fillField_fromAnother(temp + r"\ecoroofs","InstallDate","YEAR_")
-
 
 #populate As Built fields - available for collection links and nodes
 fillField_fromAnother(temp + r"\LinkstoPoint","As_Built","JOBNO")
