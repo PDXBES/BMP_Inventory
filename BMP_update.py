@@ -6,7 +6,7 @@
 #
 # Created:     30/01/2015
 #
-#
+# testing GitHub Desktop Client
 #-------------------------------------------------------------------------------
 import arcpy
 from utilities import reorder_fields, rename_fields, addMessage
