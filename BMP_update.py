@@ -13,6 +13,8 @@ from utilities import reorder_fields, rename_fields, addMessage
 from BMP_tools import add_StandardFields, incrementField, fillField, fillField_fromAnother,fillField_ifOverlap, fillField_Conditional,calcField_fromOverlap,fillField_fromDict,calcField_withinDistance
 
 #Testing Github Desktop
+# the test was successful
+
 arcpy.env.overwriteOutput = True
 
 temp = r"C:\temp\BMP_working.gdb"
